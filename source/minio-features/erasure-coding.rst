@@ -145,14 +145,13 @@ heal damaged or missing data blocks when reconstructing an object. MinIO uses
 the ``EC:N`` notation to refer to the number of parity blocks (``N``) in the
 Erasure Set.
 
-When applications write a new object to the MinIO cluster, MinIO randomly
-selects an Erasure Set in the cluster to store that object. For versioned
-objects, MinIO selects the same Erasure Set as all existing versions of that
-object.
+MinIO uses a hash of an object's name to determine into which Erasure Set to
+store that object. MinIO always uses that erasure set for objects with a
+matching name. For example, MinIO stores all :ref:`versions
+<minio-bucket-versioning>` of an object in the same Erasure Set.
 
-After MinIO selects an Erasure Set, it chunks the object for distribution in
-that set based on the number of drives in the set and the configured parity. 
-MinIO creates:
+After MinIO selects an object's Erasure Set, it divides the object based on the
+number of drives in the set and the configured parity. MinIO creates:
 
 - ``(Erasure Set Drives) - EC:N`` Data Blocks, *and*
 - ``EC:N`` Parity Blocks.
@@ -210,9 +209,9 @@ MinIO provides the following two storage classes:
    The maximum possible parity value is half of the total drives in the
    :ref:`Erasure Set <minio-ec-erasure-set>`.
 
-   ``STANDARD`` parity *must* be greater than ``REDUCED_REDUNDANCY``. If
-   ``REDUCED_REDUNDANCY`` is unset, ``STANDARD`` parity *must* be greater
-   than 2
+   ``STANDARD`` parity *must* be greater than or equal to
+   ``REDUCED_REDUNDANCY``. If ``REDUCED_REDUNDANCY`` is unset, ``STANDARD``
+   parity *must* be greater than 2
 
 ``REDUCED_REDUNDANCY``
    The ``REDUCED_REDUNDANCY`` storage class allows creating objects with
@@ -227,12 +226,12 @@ MinIO provides the following two storage classes:
 
    The default value is ``EC:2``.
 
-   ``REDUCED_REDUNDANCY`` parity *must* be less than ``STANDARD``. If 
-   ``STANDARD`` is unset, ``REDUCED_+REDUNDANCY`` must be less than
-   half of the total drives in the :ref:`Erasure Set <minio-ec-erasure-set>`.
+   ``REDUCED_REDUNDANCY`` parity *must* be less than or equal to ``STANDARD``.
+   If ``STANDARD`` is unset, ``REDUCED_REDUNDANCY`` must be less than half of
+   the total drives in the :ref:`Erasure Set <minio-ec-erasure-set>`.
 
-   The minimum value is ``EC:4``. ``REDUCED_REDUNDANCY`` is therefore not
-   supported for MinIO deployments with 4-drive Erasure Sets.
+   ``REDUCED_REDUNDANCY`` is not supported for MinIO deployments with
+   4-drive Erasure Sets.
 
 MinIO references the ``x-amz-storage-class`` header in request metadata for
 determining which storage class to assign an object. The specific syntax
